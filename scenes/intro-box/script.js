@@ -70,7 +70,7 @@ const makeBox = () => {
 const makeMonolith = () => {
     const scaleRatio = .75;
     boxMesh.scale.set(4*scaleRatio,9*scaleRatio,1*scaleRatio);
-    boxMesh.rotation.set(0,Math.PI*2*.065,0);
+    boxMesh.rotation.set(0,Math.PI*2*.075,0);
     spotlight.position.set(-1.5,2,-5);
     spotlight.intensity=1;
     renderer.render(scene, camera);
