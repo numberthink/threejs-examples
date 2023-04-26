@@ -1,0 +1,27 @@
+body {
+    margin: 0;
+  }
+  
+  
+  #webglCanvas {
+    position: absolute;
+  }
+
+  #info {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: end;
+    justify-content: center;
+  }
+
+  #instructions {
+    z-index: 1;
+    color: white;
+    visibility: hidden;
+    background-color: hsla(0,0%,40%,.7);
+    padding: 1rem 1rem;
+    text-align: center;
+    font-size: 1.25rem;
+  }
