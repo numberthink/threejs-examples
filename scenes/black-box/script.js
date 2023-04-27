@@ -105,4 +105,4 @@ window.addEventListener('keydown',(event)=> {
             animating = true;
         }
     }
-})
+});
