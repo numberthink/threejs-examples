@@ -32,6 +32,7 @@ const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
 const boxMaterial = new THREE.MeshPhongMaterial({shininess: 50,color: new THREE.Color('rgb(0,0,0)'), specular: new THREE.Color('rgb(255,255,255)')});
 const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
 boxMesh.rotation.set(0,Math.PI*2*.04,0);
+boxMesh.scale.set(2,2,2);
 
 scene.add(boxMesh);
 
@@ -60,7 +61,7 @@ window.addEventListener('resize',() => {
 
 // gui to set it to black monolith dimensions
 const makeBox = () => {
-    boxMesh.scale.set(1,1,1);
+    boxMesh.scale.set(2,2,2);
     boxMesh.rotation.set(0,Math.PI*2*.04,0);
     spotlight.position.set(-1.5,0,-5);
     spotlight.intensity=.5;

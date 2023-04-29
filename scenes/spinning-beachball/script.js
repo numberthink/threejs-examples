@@ -62,7 +62,10 @@ const shaderMaterial = new THREE.ShaderMaterial({
         vec2 st = vUv;
 
         vec2 circle_center = vec2(.5,.5);
-        float in_circle = 1.0 - ceil(max(distance(st,circle_center)-uCircleRadius,0.0));
+        float circle_edge_length = uCircleRadius*.1;
+        float in_circle_val = max(distance(st,circle_center)-uCircleRadius+circle_edge_length ,0.0);
+        in_circle_val = smoothstep(0.0,1.,in_circle_val);
+        float in_circle = 1.0 - ceil(in_circle_val);
         float angle = atan(st.x-circle_center.x,st.y-circle_center.y);
         float angle_pct = 1.0 - mod((angle+3.1415),3.1415*2.)/(3.1415*2.);
 
