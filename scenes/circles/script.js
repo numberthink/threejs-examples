@@ -30,12 +30,12 @@ shaderGeometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( [ 0, 2, 0, 
 
 const shaderMaterial = new THREE.ShaderMaterial({
     uniforms: {
-        uLightness: {value: .95},
         uCircleRadius: {value: .1},
-        uRotationPct: {value: 0},
-        uFunRotationPct: {value: 0},
-        uCircleEdgePct: {value: .05},
+        uCircleEdgePct: {value: .1},
         uAspectRatio: {value: window.innerWidth/window.innerHeight},
+        uNumCircles: {value: 8},
+        uCircleColor: {value: 0},
+        uCircleOffset: {value: 0},
         uColors: {type: "v3v", value: [
             new THREE.Color('rgb(16,154,245)'),
             new THREE.Color('rgb(186,93,210)'),
@@ -57,49 +57,31 @@ const shaderMaterial = new THREE.ShaderMaterial({
 
     uniform vec3 uColors[6];
     uniform float uCircleRadius;
-    uniform float uFunRotationPct;
-    uniform float uRotationPct;
     uniform float uCircleEdgePct;
     uniform float uAspectRatio;
 
+    uniform float uNumCircles;
+    uniform float uCircleColor;
+    uniform float uCircleOffset;
+
     void main() {
         vec2 st = vUv;
+        st.x = st.x*max((uAspectRatio),1.) + (1.0-max((uAspectRatio),1.))*.5;
+        st.y = st.y*max((1./uAspectRatio),1.) + (1.0-max((1./uAspectRatio),1.))*.5;
 
-        st.x = st.x*min((uAspectRatio),1.) + (1.0-min((uAspectRatio),1.))*.5;
-        st.y = st.y*min((1./uAspectRatio),1.) + (1.0-min((1./uAspectRatio),1.))*.5;
-
-        vec2 new_st = st;
+        st.y = st.y + uCircleOffset;
 
         vec2 circle_center = vec2(.5,.5);
 
+        st = fract(st*uNumCircles);
+
+        
         float circle_edge_length = uCircleRadius*uCircleEdgePct;
         float in_circle_val = max(distance(st,circle_center)-uCircleRadius+circle_edge_length ,0.0)/circle_edge_length;
         in_circle_val = smoothstep(0.0,1.,in_circle_val);
         float in_circle = 1.0 - (in_circle_val);
 
-        float angle = atan(st.x-circle_center.x,st.y-circle_center.y);
-        float angle_pct = 1.0 - mod((angle+3.1415),3.1415*2.)/(3.1415*2.);
-
-        new_st.x = cos((angle_pct+uRotationPct)*3.1415*2.)*distance(st,circle_center) + circle_center.x;
-        new_st.y = sin((angle_pct+uRotationPct)*3.1415*2.)*distance(st,circle_center) + circle_center.y;
-        angle = atan(new_st.x-circle_center.x,new_st.y-circle_center.y);
-
-        angle_pct = 1.0 - mod((angle+3.1415),3.1415*2.)/(3.1415*2.);
-
-        angle_pct = mod(angle_pct + uFunRotationPct,1. );
-
-
-
-        float rotation_amount = sin(3.1415*.5*(1.0 - abs(distance(st,circle_center) - uCircleRadius*.5)/(uCircleRadius*.5)));
-        
-        float tran_pct = .027;
-        new_st.x = new_st.x + cos(angle_pct*3.1415*2.)*rotation_amount*tran_pct;
-        new_st.y = new_st.y + sin(angle_pct*3.1415*2.)*rotation_amount*tran_pct;
-
-        float new_angle = atan(new_st.x-circle_center.x,new_st.y-circle_center.y);
-        float new_angle_pct = 1.0 - mod((new_angle+3.1415),3.1415*2.)/(3.1415*2.);
-
-        vec3 circle_color = uColors[int(floor(new_angle_pct*6.))];
+        vec3 circle_color = uColors[int(uCircleColor)];
 
         gl_FragColor = vec4(vec3(circle_color)*in_circle,1.);
     }    
@@ -121,13 +103,12 @@ renderer.render(scene, camera);
 
 const params = {
     autoAnimate: true,
-    animationDuration: 1,
+    animationDuration: 4,
     animationType: 'linear',
     animationTypeOptions: ['linear','sin'],
     animationStart: 0,
     animationEnd: 1,
     hideInstructions: false,
-    funRotation: false,
     reverse: false,
 }
 
@@ -199,18 +180,16 @@ const doAnimation = (elapsedTime) => {
 // set up gui
 const gui = new GUI();
 gui.add(params, 'autoAnimate').name('Auto animate').onChange((value)=> {if (value) startAnimation()});
-gui.add( params, 'animationDuration', 0,4,.01 ).name('Animations duration');
+gui.add( params, 'animationDuration', 0,10,.01 ).name('Animations duration');
 gui.add(params,'animationType',params.animationTypeOptions).name('Animation type');
-gui.add(params, 'funRotation').name('Fun rotation');
 gui.add(params, 'reverse').name('Reverse');
-// gui.add(params, 'hideInstructions').onChange((value)=> {
-//     if (value) {
-//         hideInstructions();
-//     }
-//     else {
-//         showInstructions();
-//     }
-// });
+gui.add(shaderMesh.material.uniforms.uAspectRatio, 'value', 0, 4,.01).name('Aspect ratio');
+gui.add(shaderMesh.material.uniforms.uNumCircles, 'value', 1, 16,.1).name('Number of Circles');
+gui.add(shaderMesh.material.uniforms.uCircleRadius, 'value', 0, 1,.01).name('Circle radius');
+gui.add(shaderMesh.material.uniforms.uCircleEdgePct, 'value', 0, 1,.01).name('Circle edge length');
+gui.add(shaderMesh.material.uniforms.uCircleColor, 'value', 0, 5,1).name('Circle color index');
+gui.add(shaderMesh.material.uniforms.uCircleOffset, 'value', 0, 1,.01).name('Circle offset Y');
+
 
 
 
@@ -231,14 +210,7 @@ const tick = () => {
     
         doAnimation(elapsedTime);
 
-        if (params.funRotation) {
-            shaderMesh.material.uniforms.uFunRotationPct.value = animationState.value;
-            shaderMesh.material.uniforms.uRotationPct.value = 0;
-        }
-        else {
-            shaderMesh.material.uniforms.uRotationPct.value = animationState.value;
-            shaderMesh.material.uniforms.uFunRotationPct.value = 0;
-        }
+        shaderMesh.material.uniforms.uCircleOffset.value = animationState.value;
     
     
         renderer.render(scene, camera);
@@ -260,7 +232,7 @@ window.addEventListener('resize',() => {
     renderer.setSize(windowWidth, windowHeight);
     camera.aspect = windowWidth/windowHeight;
     camera.updateProjectionMatrix();
-    shaderMesh.material.uniforms.uAspectRatio.value = window.innerWidth/window.innerHeight;
+    shaderMesh.material.uniforms.uAspectRatio.value = (window.innerWidth/window.innerHeight);
 });
 
 
@@ -276,31 +248,6 @@ window.addEventListener('keydown',(event)=> {
             animating = true;
         }
     }
-    else if (['ArrowRight','ArrowLeft'].includes(event.key) && !params.autoAnimate) {
-        if (event.key=='ArrowRight') {
-            startAnimation();
-        }
-        else {
-            startAnimation(true);
-        }
-    }
 });
 
-const startAnimation = (reverse=false) => {
-    resetAnimationState();
-    if (reverse) {
-        animationState.reverse = true;
-    }
-}
 
-// const instructionsText = `Press "f" key to freeze/unfreeze animation. Set auto-animation to true for continuous animation. If auto-animation is false, use Arrow-Right and Arrow-Left keys to run animation forward and back.`
-// document.getElementById('instructions').innerText = instructionsText;
-// const instructionsElement = document.getElementById('instructions');
-// instructionsElement.style.visibility = 'visible';
-// const hideInstructions = () => {
-//     instructionsElement.style.visibility = 'hidden';
-// }
-
-// const showInstructions = () => {
-//     instructionsElement.style.visibility = 'visible';
-// }
