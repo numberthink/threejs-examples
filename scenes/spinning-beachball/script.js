@@ -1,3 +1,4 @@
+import { create } from 'd3';
 import * as THREE from 'three';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
@@ -23,6 +24,7 @@ const scene = new THREE.Scene();
 
 // create shader and add to scene
 const camera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
+
 
 const shaderGeometry = new THREE.BufferGeometry();
 shaderGeometry.setAttribute( 'position', new THREE.Float32BufferAttribute( [ - 1, 3, 0, - 1, - 1, 0, 3, - 1, 0 ], 3 ) );
@@ -53,6 +55,7 @@ const shaderMaterial = new THREE.ShaderMaterial({
     }
     `,
     fragmentShader: `
+    #define PI 3.14159265359;
     varying vec2 vUv;
 
     uniform vec3 uColors[6];
@@ -106,6 +109,8 @@ const shaderMaterial = new THREE.ShaderMaterial({
 
     `
 });
+
+
 
 const shaderMesh = new THREE.Mesh(shaderGeometry,shaderMaterial);
 scene.add(shaderMesh);
