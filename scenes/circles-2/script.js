@@ -10,11 +10,13 @@ const canvas = document.getElementById('webglCanvas');
 const renderer = new THREE.WebGLRenderer({
         canvas: canvas,
         antialias: true,
-        alpha: true
+        alpha: true,
+        preserveDrawingBuffer : true,
     });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio( Math.min(window.devicePixelRatio,2));
+renderer.setClearColor(0xffffff,1);
 
 
 
@@ -29,36 +31,95 @@ camera.position.set(0 , 0 , -5 );
 camera.lookAt(new THREE.Vector3(0,0,0));
 
 
-
-
-const circleParams = {
-    numRings: 10,
-    maxCircleRadius: .3,
-    minCircleRadius: .05,
-    maxCircles: 100,
+const fixedCircleParams1 = {
+    numRings: 12,
+    maxCircleRadius: .25,
+    minCircleRadius: .075,
+    maxCircles: 110,
     minCircles: 1,
     totalRadius: 10,
+    scale: .75,
+    circleRadiusPow: 1.3,
+    totalRadiusPow: .8,
+    rotationOffset: .1,
+    rotationOffsetPow: .3,
+    skew: 0,
+    maxZOffset: 5,
+    zOffsetPow: .55,
+    middleCircle: false,
+    minOpacity: .6,
+    opacityPow: .85,
+}
+
+const fixedCircleParams2 = {
+    numRings: 8,
+    maxCircleRadius: .45,
+    minCircleRadius: .15,
+    maxCircles: 50,
+    minCircles: 1,
+    totalRadius: 10,
+    scale: 1.15,
+    circleRadiusPow: 1.3,
+    totalRadiusPow: .7,
+    rotationOffset: .2,
+    rotationOffsetPow: .3,
+    skew: 0,
+    maxZOffset: 7,
+    zOffsetPow: .45,
+    middleCircle: false,
+    minOpacity: .7,
+    opacityPow: .85,
+}
+
+const circleParams = {
+    numRings: 12,
+    maxCircleRadius: .25,
+    minCircleRadius: .075,
+    maxCircles: 110,
+    minCircles: 1,
+    totalRadius: 10,
+    scale: .75,
+    circleRadiusPow: 1.3,
+    totalRadiusPow: .8,
+    rotationOffset: .1,
+    rotationOffsetPow: .3,
+    skew: 0,
+    maxZOffset: 5,
+    zOffsetPow: .55,
+    middleCircle: false,
+    minOpacity: .6,
+    opacityPow: .85,
 }
 
 const makeCircles = () => {
     for (let i=0;i<circleParams.numRings;i++) {
+        if (i==0 && !circleParams.middleCircle) {
+            continue;
+        }
         let ringPct = i/circleParams.numRings;
 
         let numCircles = Math.floor(ringPct*(circleParams.maxCircles - circleParams.minCircles)+circleParams.minCircles);
-        let circleRadius = (1-ringPct)*(circleParams.maxCircleRadius-circleParams.minCircleRadius) + circleParams.minCircleRadius;
-        let totalRadius = ringPct*circleParams.totalRadius;
+        let circleRadius = Math.pow((1-ringPct),circleParams.circleRadiusPow)*(circleParams.maxCircleRadius-circleParams.minCircleRadius) + circleParams.minCircleRadius;
+        let totalRadius = Math.pow(ringPct,circleParams.totalRadiusPow)*circleParams.totalRadius;
+        let rotationOffset = Math.pow(ringPct,circleParams.rotationOffsetPow)*(circleParams.rotationOffset)*Math.PI*2;
         for (let j=0;j<numCircles;j++) {
+
             let circlePct = j/numCircles;
-            let circleAngle = circlePct*Math.PI*2;
-            let circleX = Math.cos(circleAngle)*totalRadius;
-            let circleY = Math.sin(circleAngle)*totalRadius;
+            let circleAngle = circlePct*Math.PI*2 + rotationOffset;
+            let circleX = Math.cos(circleAngle)*totalRadius + Math.cos(2.4)*ringPct*circleParams.skew;
+            let circleY = Math.sin(circleAngle)*totalRadius + Math.sin(2.4)*ringPct*circleParams.skew;
             const arcShape = new THREE.Shape()
             .moveTo(circleRadius+circleX,circleRadius+circleY)
             .absarc(circleX,circleY,circleRadius,0,Math.PI*2, false);
 
+            const zOffset = circleParams.maxZOffset*Math.pow(ringPct,circleParams.zOffsetPow);
+            const matOpacity = Math.pow((1-ringPct),circleParams.opacityPow)*(1-circleParams.minOpacity) + circleParams.minOpacity;
             const geometry = new THREE.ShapeGeometry( arcShape,24 );
-            const material = new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide } );
+            const material = new THREE.MeshBasicMaterial( { color: 0x000000, side: THREE.DoubleSide,transparent: true } );
+            material.opacity = matOpacity;
             const mesh = new THREE.Mesh( geometry, material ) ;
+            mesh.scale.set(circleParams.scale, circleParams.scale,circleParams.scale);
+            mesh.position.set(0,0,zOffset);
             scene.add( mesh );
 
         }
@@ -89,6 +150,7 @@ const params = {
     animationEnd: 1,
     hideInstructions: false,
     reverse: false,
+    screenshotSize: 32,
 }
 
 // state
@@ -158,10 +220,11 @@ const doAnimation = (elapsedTime) => {
 
 // set up gui
 const gui = new GUI();
-gui.add(params, 'autoAnimate').name('Auto animate').onChange((value)=> {if (value) startAnimation()});
-gui.add( params, 'animationDuration', 0,10,.01 ).name('Animations duration');
-gui.add(params,'animationType',params.animationTypeOptions).name('Animation type');
-gui.add(params, 'reverse').name('Reverse');
+gui.add(params, 'screenshotSize',1,200,1).name('Screen shot size');
+// gui.add(params, 'autoAnimate').name('Auto animate').onChange((value)=> {if (value) startAnimation()});
+// gui.add( params, 'animationDuration', 0,10,.01 ).name('Animations duration');
+// gui.add(params,'animationType',params.animationTypeOptions).name('Animation type');
+// gui.add(params, 'reverse').name('Reverse');
 // gui.add(shaderMesh.material.uniforms.uAspectRatio, 'value', 0, 4,.01).name('Aspect ratio');
 // gui.add(shaderMesh.material.uniforms.uNumCircles, 'value', 1, 16,.1).name('Number of Circles');
 // gui.add(shaderMesh.material.uniforms.uCircleRadius, 'value', 0, 1,.01).name('Circle radius');
@@ -204,13 +267,16 @@ tick();
 
 
 // update camera and renderer when window is resized
-window.addEventListener('resize',() => {
+const onWindowResize = () => {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     renderer.setSize(windowWidth, windowHeight);
     camera.aspect = windowWidth/windowHeight;
     camera.updateProjectionMatrix();
-    shaderMesh.material.uniforms.uAspectRatio.value = (window.innerWidth/window.innerHeight);
+}
+
+window.addEventListener('resize',() => {
+    onWindowResize();
 });
 
 
@@ -226,4 +292,24 @@ window.addEventListener('keydown',(event)=> {
             animating = true;
         }
     }
+    if (event.key=='s') {
+        snapshotCanvas();
+    }
 });
+
+const manualCanvasResize = (size) => {
+    renderer.setSize(size,size);
+    camera.aspect = 1;
+    camera.updateProjectionMatrix();
+    renderer.render(scene, camera);
+}
+
+const snapshotCanvas = () => {
+    manualCanvasResize(params.screenshotSize);
+    const canvas = document.getElementById('webglCanvas');
+    const imgUrl = canvas.toDataURL('image/png',1);
+    console.log(imgUrl);
+    onWindowResize();
+}
+
+
