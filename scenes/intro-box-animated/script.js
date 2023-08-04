@@ -29,7 +29,8 @@ const scene = new THREE.Scene();
 
 // create box and add to scene
 const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-const boxMaterial = new THREE.MeshPhongMaterial({shininess: 50,color: new THREE.Color('rgb(0,0,0)'), specular: new THREE.Color('rgb(255,255,255)')});
+const boxMaterial = new THREE.MeshPhongMaterial({shininess: 50,color: new THREE.Color('rgb(5,5,5)'),
+ specular: new THREE.Color('rgb(255,255,255)')});
 const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
 boxMesh.rotation.set(0,Math.PI*2*.04,0);
 boxMesh.scale.set(2,2,2);
@@ -42,6 +43,11 @@ spotlight.position.set(-1.5,0,-5);
 
 
 scene.add(spotlight);
+
+//create hemisphere light and add to scene
+const hemispherelight = new THREE.HemisphereLight( 0xffffff, 0x000, 7);
+
+scene.add(hemispherelight);
 
 
 
@@ -68,9 +74,9 @@ const boxState = {
     zRotation: boxMesh.rotation.z,
 }
 
-
+let animationActive = true;
 const tick = () => {
-    if (animationParams.active) {
+    if (animationActive) {
 
         const deltaTime = clock.getDelta(); // get the delta time at each frame
 
@@ -137,6 +143,7 @@ gui.add(animationParams, 'xRotationSpeed', 0, 2,.01).name('X Rotation Speed');
 gui.add(animationParams, 'yRotationSpeed', 0, 2,.01).name('Y Rotation Speed');
 gui.add(animationParams, 'zRotationSpeed', 0, 2,.01).name('Z Rotation Speed');
 gui.add(animationParams, 'active').name('Animation active').onChange((value) => {
+    animationActive = value;
     if (value) {
         const elapsedTime = clock.getElapsedTime();
         // resets clock so getDelta() will be since now (so no jumps)
@@ -157,6 +164,7 @@ gui.add(params, 'hideInstructions').onChange((value)=> {
 window.addEventListener('keydown',(event)=> {
     if (event.key=='f') {
        animationParams.active = !animationParams.active;
+       animationActive = animationParams.active;
        if (animationParams.active) {
             const elapsedTime = clock.getElapsedTime();
             // resets clock so getDelta() will be since now (so no jumps)

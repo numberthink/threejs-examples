@@ -8,11 +8,14 @@ const canvas = document.getElementById('webglCanvas');
 const renderer = new THREE.WebGLRenderer({
         canvas: canvas,
         antialias: true,
-        alpha: true
+        alpha: true,
+        preserveDrawingBuffer: true,
     });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio( Math.min(window.devicePixelRatio,2));
+
+renderer.setClearColor(0xffffff,1);
 
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.5;
@@ -89,3 +92,17 @@ gui.add(params, 'monolith').name('Black monolith').onChange((value)=> {
         makeBox();
     }
 });
+const captureCanvas = {
+    takeScreenshot: async function() {
+        const png = canvas.toDataURL("image/png",1);
+        const blob = await (await fetch(png)).blob()
+        downloadButton.href = URL.createObjectURL(blob);
+        downloadButton.download="screenshot.png"
+        downloadButton.click();
+    }
+}
+gui.add(captureCanvas, 'takeScreenshot').name('Take screenshot');
+
+const downloadButton = document.createElement('a');
+document.body.appendChild(downloadButton);
+// downloadButton.innerText = 'Download';
