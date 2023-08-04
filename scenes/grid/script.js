@@ -50,7 +50,7 @@ const gridShader = {
     uniform float uYVisiblePct;
 
     void main() {
-      // Pick a coordinate to visualize in a grid
+  
       vec2 coord = vertex.xy;
 
       vec2 uv = vUv;
@@ -58,7 +58,7 @@ const gridShader = {
       coord.x = coord.x*uNumCols;
       coord.y = coord.y*uNumRows;
     
-      // Compute anti-aliased world-space grid lines
+     
       vec2 grid = abs(fract(coord - 0.5) - 0.5)*1. / fwidth(coord*1.);
     
       // animate
