@@ -295,7 +295,7 @@ const setGridScale = (windowWidth,windowHeight) => {
     gridMesh.scale.set(screenDims.width*params.screenScale,screenDims.height*params.screenScale,1);
 }
 
-export const onWindowResize = (windowWidth,windowHeight) => {
+const onWindowResize = (windowWidth,windowHeight) => {
     renderer.setSize(windowWidth, windowHeight);
     camera.aspect = windowWidth/windowHeight;
     camera.updateProjectionMatrix();
