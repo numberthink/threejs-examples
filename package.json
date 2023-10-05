@@ -12,6 +12,7 @@
     "vite": "^4.2.0"
   },
   "dependencies": {
-    "three": "^0.151.3"
+    "three": "^0.151.3",
+    "three-msdf-text-utils": "^1.1.6"
   }
 }
